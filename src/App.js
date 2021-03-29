@@ -1,25 +1,37 @@
-import logo from './logo.svg';
-import './App.css';
+import React from 'react'
+import { connect } from 'nats.ws'
 
-function App() {
+export default function Home() {
+  const [status, setStatus] = React.useState('initialising')
+
+  React.useEffect(() => {
+    async function init() {
+      try {
+        const nc = await connect({ servers: ['demo.nats.io:4442', 'demo.nats.io:4222'] })
+        setStatus(`connected to ${nc.getServer()}`)
+        // this promise indicates the client closed
+        const done = nc.closed()
+        // do something with the connection
+
+        // close the connection
+        await nc.close()
+        // check if the close was OK
+        const err = await done
+        if (err) {
+          setStatus(`error closing:`, err)
+        }
+      } catch (err) {
+        setStatus(`error connecting to demo.nats.io`)
+      }
+    }
+    init()
+  }, [])
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}
+    <main>
+      <h1>nats.ws Hello world</h1>
 
-export default App;
+      <p>{status}</p>
+    </main>
+  )
+}
